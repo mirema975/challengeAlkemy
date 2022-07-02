@@ -1,8 +1,11 @@
 package com.example.DisneyAPI.controllers;
 
+import com.example.DisneyAPI.dtos.PersonajeDto;
 import com.example.DisneyAPI.models.Personaje;
 import com.example.DisneyAPI.service.PersonajeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,8 +20,8 @@ public class PersonajeController {
     PersonajeService personajeService;
 
     @GetMapping
-    public List<Personaje> obtenerPersonajes(){
-        return personajeService.obtenerPersonajes();
+    public ResponseEntity<List<PersonajeDto>> obtenerPersonajes(){
+        return new ResponseEntity<>(personajeService.obtenerPersonajes(), HttpStatus.OK);
     }
 
     @GetMapping(params = "id")
@@ -27,8 +30,8 @@ public class PersonajeController {
     }
 
     @GetMapping(params = "name")
-    public List<Personaje> obtenerPorNombre(@RequestParam String name){
-        return personajeService.obtenerPorNombre(name);
+    public ResponseEntity<List<PersonajeDto>> obtenerPorNombre(@RequestParam String name){
+        return new ResponseEntity<>(personajeService.findByNombre(name), HttpStatus.OK);
     }
 
     @GetMapping(params = "age")
@@ -64,6 +67,7 @@ public class PersonajeController {
         }
         return "No se elimino el personaje";
     }
+
 
 
 }

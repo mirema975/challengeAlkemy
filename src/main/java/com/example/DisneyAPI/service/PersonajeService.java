@@ -1,5 +1,7 @@
 package com.example.DisneyAPI.service;
 
+import com.example.DisneyAPI.converters.PersonajeConverter;
+import com.example.DisneyAPI.dtos.PersonajeDto;
 import com.example.DisneyAPI.models.Personaje;
 import com.example.DisneyAPI.repository.PersonajeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,22 +17,28 @@ public class PersonajeService {
     @Autowired
     PersonajeRepository personajeRepository;
 
+    @Autowired
+    PersonajeConverter personajeConverter;
 
-    public List<Personaje> obtenerPersonajes() {
-        return (List<Personaje>) personajeRepository.findAll();
+    public List<PersonajeDto> obtenerPersonajes() {
+        List<Personaje> entities = personajeRepository.findAll();
+
+        List<PersonajeDto> dtos = new ArrayList<>();
+
+        entities.forEach(entity -> dtos.add(personajeConverter.entityToDto(entity)));
+
+        return dtos;
     }
 
-    public List<Personaje> obtenerPorNombre(String nombre){
-        List personajesFiltrados = new ArrayList<>();
-        personajeRepository.findByNombre(nombre).forEach(personaje -> 
-        {
-            List personajes = new ArrayList<>();
-            personajes.add(personaje.getId());
-            personajes.add(personaje.getImagen());
-            personajes.add(personaje.getNombre());
-            personajesFiltrados.add(personajes);
-        });
-        return personajesFiltrados;
+    public List<PersonajeDto> findByNombre(String nombre){
+        List<Personaje> entities = personajeRepository.findByNombre(nombre);
+
+        List<PersonajeDto> dtos = new ArrayList<>();
+
+        entities.forEach(entity -> dtos.add(personajeConverter.entityToDto(entity)));
+
+        return dtos;
+
     }
 
     public List<Personaje> obtenerPorEdad(int edad){

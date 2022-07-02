@@ -8,9 +8,10 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.DisneyAPI.converters.PeliculaConverter;
+import com.example.DisneyAPI.dtos.PeliculaDto;
 import com.example.DisneyAPI.models.Pelicula;
 import com.example.DisneyAPI.repository.PeliculaRepository;
-import com.example.DisneyAPI.repository.PersonajeRepository;
 
 @Service
 public class PeliculaService {
@@ -18,64 +19,71 @@ public class PeliculaService {
     @Autowired
     PeliculaRepository peliculaRepository;
 
-    public List<Pelicula> obtenerPeliculas(){
-        return peliculaRepository.findAll();
+    @Autowired
+    PeliculaConverter peliculaConverter;
+
+    public List<PeliculaDto> findAll(){
+        List<Pelicula> entities = peliculaRepository.findAll();
+
+        List<PeliculaDto> dtos = new ArrayList<>(entities.size());
+
+        entities.forEach(entity -> dtos.add(peliculaConverter.entityToDto(entity)));
+
+        return dtos;
+        // return peliculaRepository.findAll().stream().map(peliculaConverter::entityToDto).toList();
     }
 
-    public Optional<Pelicula> obtenerPelicula(Long id){
-        return peliculaRepository.findById(id);
+    public PeliculaDto findById(Long id){
+        Optional<Pelicula> entityOptional = peliculaRepository.findById(id);
+
+        if(entityOptional.isPresent()) return peliculaConverter.entityToDto(entityOptional.get());
+        return null;
     }
 
-    public List<Pelicula> obtenerPorTitulo(String titulo){
-        List peliculasFiltradas = new ArrayList<>();
-        peliculaRepository.findByTitulo(titulo).forEach(p -> {
-            List peliculas = new ArrayList<>();
-            peliculas.add(p.getId());
-            peliculas.add(p.getImagen());
-            peliculas.add(p.getTitulo());
-            peliculas.add(p.getFecha());
-            peliculasFiltradas.add(peliculas);
-        });
-        return peliculasFiltradas;
+    public List<PeliculaDto> findByTitulo(String titulo){
+        List<Pelicula> entities = peliculaRepository.findByTitulo(titulo);
+
+        List<PeliculaDto> dtos = new ArrayList<>(entities.size());
+
+        entities.forEach(entity -> dtos.add(peliculaConverter.entityToDto(entity)));
+
+        return dtos;
     }
 
-    public List<Pelicula> ordenarPeliculas(String orden){
-        List<Pelicula> allPeliculas = peliculaRepository.findAll();
-        List peliculasOrdenadas = new ArrayList<>();
-        if(orden.equals("DESC")){
-            Collections.sort(allPeliculas, (o1, o2) -> o2.getTitulo().compareTo(o1.getTitulo()));
-            allPeliculas.forEach(pelicula -> {
-                List peliculas = new ArrayList<>();
-                peliculas.add(pelicula.getId());
-                peliculas.add(pelicula.getImagen());
-                peliculas.add(pelicula.getTitulo());
-                peliculas.add(pelicula.getFecha());
-                peliculasOrdenadas.add(peliculas);
-            });
-            return peliculasOrdenadas;
-        }
-        Collections.sort(allPeliculas, (o1, o2) -> o1.getTitulo().compareTo(o2.getTitulo()));
-            allPeliculas.forEach(pelicula -> {
-                List peliculas = new ArrayList<>();
-                peliculas.add(pelicula.getId());
-                peliculas.add(pelicula.getImagen());
-                peliculas.add(pelicula.getTitulo());
-                peliculas.add(pelicula.getFecha());
-                peliculasOrdenadas.add(peliculas);
-            });
-            return peliculasOrdenadas;
-    }
-
-    public Pelicula guardarPelicula(Pelicula pelicula) {
-        return peliculaRepository.save(pelicula);
-    }
-
-    public void agregarPersonaje(Long id, Long idCharacter){
+    public List<PeliculaDto> ordenar(String orden){
+        List<Pelicula> entities = peliculaRepository.findAll();
         
+        List<PeliculaDto> dtos = new ArrayList<>(entities.size());
+
+        entities.forEach(entity -> dtos.add(peliculaConverter.entityToDto(entity)));
+
+        if(orden.equals("DESC")){
+            Collections.sort(dtos, (o1, o2) -> o2.getTitulo().compareTo(o1.getTitulo()));
+            return dtos;
+        }else if (orden.equals("ASC")){
+            Collections.sort(dtos, (o1, o2) -> o1.getTitulo().compareTo(o2.getTitulo()));
+            return dtos;
+        }
+        return Collections.emptyList();
     }
 
-    public void eliminarPelicula(Long id){
+    public PeliculaDto guardar(PeliculaDto dto) {
+        peliculaRepository.save(peliculaConverter.dtoToEntity(dto));
+        return dto;
+    }
+
+    public void eliminar(Long id){
         peliculaRepository.deleteById(id);
+    }
+
+    public PeliculaDto update(Long id, PeliculaDto dto) {
+        Optional<Pelicula> entityOptional = peliculaRepository.findById(id);
+
+        if(entityOptional.isPresent()){
+            peliculaConverter.fill(entityOptional.get(), dto);
+            return peliculaConverter.entityToDto(peliculaRepository.save(entityOptional.get()));
+        }
+        return null;
     }
 
 
